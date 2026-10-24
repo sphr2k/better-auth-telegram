@@ -5,7 +5,7 @@ You want Telegram auth in your app. Bold choice. Let's get it done without a twe
 ## Prerequisites
 
 - Node.js >= 22
-- A [Better Auth](https://www.better-auth.com/) project (`>=1.6.22 <1.7.0`)
+- A [Better Auth](https://www.better-auth.com/) project (`>=1.7.12 <1.8.0`)
 - A Telegram account (shocking, I know)
 
 ## Install

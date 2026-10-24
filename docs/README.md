@@ -91,7 +91,7 @@ That's it. The rest is in the [Installation Guide](./installation.md) for people
 ## Requirements
 
 - Node.js >= 22 (or Bun, or any runtime with Web Crypto API)
-- `better-auth@>=1.6.22 <1.7.0`
+- `better-auth@>=1.7.12 <1.8.0`
 - HTTPS (Telegram insists, and honestly, so should you)
 - Public domain (use ngrok for local dev)
 

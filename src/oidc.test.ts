@@ -27,7 +27,8 @@ vi.mock("@better-fetch/fetch", () => ({
 }));
 
 // Mock @better-auth/core/oauth2
-vi.mock("@better-auth/core/oauth2", () => ({
+vi.mock("@better-auth/core/oauth2", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@better-auth/core/oauth2")>()),
   createAuthorizationURL: vi.fn(),
   validateAuthorizationCode: vi.fn(),
 }));
@@ -35,6 +36,7 @@ vi.mock("@better-auth/core/oauth2", () => ({
 import {
   createAuthorizationURL,
   validateAuthorizationCode,
+  verifyProviderIdToken,
 } from "@better-auth/core/oauth2";
 import { betterFetch } from "@better-fetch/fetch";
 
@@ -154,7 +156,9 @@ describe("createTelegramOIDCProvider", () => {
 
     it("keeps the OIDC sub as the account identity instead of Telegram id", async () => {
       const provider = createTelegramOIDCProvider(BOT_TOKEN);
-      expect(await provider.accountSubject({ profile })).toBe(profile.sub);
+      expect(await provider.accountSubject({ tokens: {}, profile })).toBe(
+        profile.sub
+      );
     });
 
     it.each([
@@ -167,6 +171,7 @@ describe("createTelegramOIDCProvider", () => {
       const provider = createTelegramOIDCProvider(BOT_TOKEN);
       await expect(async () =>
         provider.accountSubject({
+          tokens: {},
           profile: { ...profile, sub } as TelegramOIDCClaims,
         })
       ).rejects.toThrow("Telegram OIDC subject is missing");
@@ -182,7 +187,7 @@ describe("createTelegramOIDCProvider", () => {
       expect(provider).toHaveProperty("createAuthorizationURL");
       expect(provider).toHaveProperty("validateAuthorizationCode");
       expect(provider).toHaveProperty("getUserInfo");
-      expect(provider).toHaveProperty("verifyIdToken");
+      expect(provider).toHaveProperty("idToken");
       expect(provider).toHaveProperty("options");
     });
 
@@ -203,7 +208,7 @@ describe("createTelegramOIDCProvider", () => {
       expect(typeof provider.createAuthorizationURL).toBe("function");
       expect(typeof provider.validateAuthorizationCode).toBe("function");
       expect(typeof provider.getUserInfo).toBe("function");
-      expect(typeof provider.verifyIdToken).toBe("function");
+      expect(provider.idToken).toBeDefined();
     });
 
     it("should set correct options with bot ID as clientId", () => {
@@ -514,7 +519,7 @@ describe("createTelegramOIDCProvider", () => {
       const result = await provider.getUserInfo({ idToken });
 
       expect(result).not.toBeNull();
-      expect(result!.user.id).toBe("99999");
+      expect(result!.user).not.toHaveProperty("id");
       expect(result!.user.name).toBe("Alice Smith");
       expect(result!.user.image).toBe("https://example.com/alice.jpg");
       expect(result!.user.emailVerified).toBe(false);
@@ -551,7 +556,7 @@ describe("createTelegramOIDCProvider", () => {
       const result = await provider.getUserInfo({ idToken });
 
       expect(result).not.toBeNull();
-      expect(result!.user.id).toBe("12345");
+      expect(result!.user).not.toHaveProperty("id");
       expect(result!.user.name).toBeUndefined();
       expect(result!.user.image).toBeUndefined();
     });
@@ -630,7 +635,7 @@ describe("createTelegramOIDCProvider", () => {
       const result = await provider.getUserInfo({ idToken });
 
       expect(result!.user.name).toBe("Overridden");
-      expect(result!.user.id).toBe("12345");
+      expect(result!.user).not.toHaveProperty("id");
     });
 
     it("should still include standard fields when mapOIDCProfileToUser is provided", async () => {
@@ -649,7 +654,7 @@ describe("createTelegramOIDCProvider", () => {
       const result = await provider.getUserInfo({ idToken });
 
       // mapOIDCProfileToUser overrides spread last
-      expect(result!.user.id).toBe("12345");
+      expect(result!.user).not.toHaveProperty("id");
       expect(result!.user.emailVerified).toBe(false);
     });
 
@@ -708,7 +713,7 @@ describe("createTelegramOIDCProvider", () => {
       });
 
       const provider = createTelegramOIDCProvider(BOT_TOKEN);
-      const result = await provider.verifyIdToken!(token);
+      const result = await verifyProviderIdToken(provider, token);
 
       expect(result).toBe(true);
       expect(mockedBetterFetch).toHaveBeenCalledWith(TELEGRAM_OIDC_JWKS_URI, {
@@ -745,7 +750,7 @@ describe("createTelegramOIDCProvider", () => {
 
       const provider = createTelegramOIDCProvider(BOT_TOKEN);
 
-      await expect(provider.verifyIdToken!(token)).resolves.toBe(true);
+      await expect(verifyProviderIdToken(provider, token)).resolves.toBe(true);
     });
 
     it("should return false when JWT header has no kid", async () => {
@@ -760,7 +765,7 @@ describe("createTelegramOIDCProvider", () => {
       const signedToken = await token.sign(rsaKeyPair.privateKey);
 
       const provider = createTelegramOIDCProvider(BOT_TOKEN);
-      const result = await provider.verifyIdToken!(signedToken);
+      const result = await verifyProviderIdToken(provider, signedToken);
 
       expect(result).toBe(false);
     });
@@ -780,7 +785,7 @@ describe("createTelegramOIDCProvider", () => {
       const token = `${header}.${payload}.invalid-signature`;
 
       const provider = createTelegramOIDCProvider(BOT_TOKEN);
-      const result = await provider.verifyIdToken!(token);
+      const result = await verifyProviderIdToken(provider, token);
 
       expect(result).toBe(false);
       expect(mockedBetterFetch).not.toHaveBeenCalled();
@@ -792,7 +797,7 @@ describe("createTelegramOIDCProvider", () => {
         clientSecret: "oidc-secret",
       });
 
-      await expect(provider.verifyIdToken!(token)).resolves.toBe(false);
+      await expect(verifyProviderIdToken(provider, token)).resolves.toBe(false);
       expect(mockedBetterFetch).not.toHaveBeenCalled();
     });
 
@@ -803,7 +808,7 @@ describe("createTelegramOIDCProvider", () => {
 
       const token = await createSignedJWT({ sub: "12345" });
       const provider = createTelegramOIDCProvider(BOT_TOKEN);
-      const result = await provider.verifyIdToken!(token);
+      const result = await verifyProviderIdToken(provider, token);
 
       expect(result).toBe(false);
     });
@@ -821,7 +826,7 @@ describe("createTelegramOIDCProvider", () => {
       const token = await createSignedJWT({ sub: "12345" });
       const provider = createTelegramOIDCProvider(BOT_TOKEN);
 
-      await expect(provider.verifyIdToken!(token)).resolves.toBe(true);
+      await expect(verifyProviderIdToken(provider, token)).resolves.toBe(true);
     });
 
     it("should return false when JWKS fetch fails", async () => {
@@ -832,7 +837,7 @@ describe("createTelegramOIDCProvider", () => {
       const token = await createSignedJWT({ sub: "12345" });
 
       const provider = createTelegramOIDCProvider(BOT_TOKEN);
-      const result = await provider.verifyIdToken!(token);
+      const result = await verifyProviderIdToken(provider, token);
       expect(result).toBe(false);
     });
 
@@ -846,7 +851,7 @@ describe("createTelegramOIDCProvider", () => {
         jwksFetchTimeoutMs: 2500,
       });
 
-      await expect(provider.verifyIdToken!(token)).resolves.toBe(true);
+      await expect(verifyProviderIdToken(provider, token)).resolves.toBe(true);
       expect(mockedBetterFetch).toHaveBeenCalledWith(TELEGRAM_OIDC_JWKS_URI, {
         timeout: 2500,
       });
@@ -862,7 +867,7 @@ describe("createTelegramOIDCProvider", () => {
       const token = await createSignedJWT({ sub: "12345" });
 
       const provider = createTelegramOIDCProvider(BOT_TOKEN);
-      const result = await provider.verifyIdToken!(token);
+      const result = await verifyProviderIdToken(provider, token);
       expect(result).toBe(false);
     });
 
@@ -881,7 +886,7 @@ describe("createTelegramOIDCProvider", () => {
       const signedToken = await token.sign(rsaKeyPair.privateKey);
 
       const provider = createTelegramOIDCProvider(BOT_TOKEN);
-      const result = await provider.verifyIdToken!(signedToken);
+      const result = await verifyProviderIdToken(provider, signedToken);
       expect(result).toBe(false);
     });
 
@@ -900,7 +905,7 @@ describe("createTelegramOIDCProvider", () => {
       const signedToken = await token.sign(rsaKeyPair.privateKey);
 
       const provider = createTelegramOIDCProvider(BOT_TOKEN);
-      const result = await provider.verifyIdToken!(signedToken);
+      const result = await verifyProviderIdToken(provider, signedToken);
       expect(result).toBe(false);
     });
 
@@ -919,7 +924,7 @@ describe("createTelegramOIDCProvider", () => {
       const signedToken = await token.sign(rsaKeyPair.privateKey);
 
       const provider = createTelegramOIDCProvider(BOT_TOKEN);
-      const result = await provider.verifyIdToken!(signedToken);
+      const result = await verifyProviderIdToken(provider, signedToken);
       expect(result).toBe(false);
     });
 
@@ -941,7 +946,7 @@ describe("createTelegramOIDCProvider", () => {
       const signedToken = await token.sign(otherKeyPair.privateKey);
 
       const provider = createTelegramOIDCProvider(BOT_TOKEN);
-      const result = await provider.verifyIdToken!(signedToken);
+      const result = await verifyProviderIdToken(provider, signedToken);
       expect(result).toBe(false);
     });
   });

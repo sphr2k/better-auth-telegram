@@ -1,26 +1,26 @@
 # Better Auth Telegram
 
-[![npm version](https://img.shields.io/npm/v/better-auth-telegram)](https://www.npmjs.com/package/better-auth-telegram)
-[![npm downloads](https://img.shields.io/npm/dm/better-auth-telegram)](https://www.npmjs.com/package/better-auth-telegram)
-[![CI](https://github.com/vcode-sh/better-auth-telegram/actions/workflows/ci.yml/badge.svg)](https://github.com/vcode-sh/better-auth-telegram/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/vcode-sh/better-auth-telegram/branch/main/graph/badge.svg)](https://codecov.io/gh/vcode-sh/better-auth-telegram)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+Public distribution fork of [vcode-sh/better-auth-telegram](https://github.com/vcode-sh/better-auth-telegram), targeting Better Auth **1.7.12–1.7.x**. Releases contain built ESM, CJS and TypeScript declarations; no private registry or registry token is needed.
+
+OIDC uses Better Auth 1.7's stable `accountSubject`, declarative ID-token verification and request-bound nonce. Provider identity remains Telegram's OIDC `sub`; profile mapping cannot select a different provider account. The signature-verification change incorporates upstream PR #38 with original attribution.
+
+Development: `bun install --frozen-lockfile`, `bun run lint`, `bun run type-check`, `bun run test:coverage`, `bun run build`. Tagging a validated commit with `v*` runs CI and publishes a `.tgz` plus `SHA256SUMS` on GitHub Releases. The release workflow uses GitHub's built-in token only.
 
 Telegram authentication plugin for [Better Auth](https://better-auth.com). Login Widget. Mini Apps. OIDC. Link/unlink. HMAC-SHA-256 verification. The whole circus.
 
 Built on Web Crypto API — works in Node, Bun, Cloudflare Workers, and whatever edge runtime you're pretending to need. No `node:crypto` tantrums.
 
-344 tests. If it breaks, roast me on [X](https://x.com/vcode_sh). If it works, also roast me. I'm there either way, posting through the pain.
+Upstream documentation follows; the installation below refers to this fork.
 
 ## Requirements
 
-- Node.js >= 22 (or Bun, or any runtime with Web Crypto API)
-- `better-auth@>=1.6.22 <1.7.0`
+- Node.js >= 24 (or Bun, or any runtime with Web Crypto API)
+- `better-auth@>=1.7.12 <1.8.0`
 
 ## Install
 
 ```bash
-npm install better-auth-telegram
+bun add https://github.com/sphr2k/better-auth-telegram/releases/download/v2.1.0-sphr2k.1/better-auth-telegram-2.1.0-sphr2k.1.tgz
 ```
 
 ## Setup
@@ -311,7 +311,7 @@ See [`examples/nextjs-app/`](./examples/nextjs-app) for a Next.js implementation
 
 ### To v2.0.0 (from v1.5.0)
 
-- Upgrade Better Auth to `>=1.6.22 <1.7.0`. Better Auth 1.7 is not supported by this release.
+- Upgrade Better Auth to `>=1.7.12 <1.8.0`. This fork targets the Better Auth 1.7 provider API.
 - `botToken` and `botUsername` are now flow-aware. Missing values log setup warnings; the affected Widget, Mini App, or OIDC operation rejects if the credential is still missing when used.
 - OIDC-only setups can omit both bot fields when `oidc.clientId` and `oidc.clientSecret` are configured explicitly.
 

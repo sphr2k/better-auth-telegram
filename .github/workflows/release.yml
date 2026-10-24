@@ -1,46 +1,32 @@
-name: Release
-
+name: Public package release
 on:
   push:
-    tags:
-      - "v*"
-
+    tags: ['v*']
 permissions:
-  contents: write
-  id-token: write
-
+  contents: read
 jobs:
+  validate:
+    uses: ./.github/workflows/ci.yml
   release:
+    needs: validate
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v7.0.1
-
-      - name: Use Node.js 24.x
-        uses: actions/setup-node@v7.0.0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
-          node-version: 24.x
-          registry-url: https://registry.npmjs.org
-          package-manager-cache: false
-
-      - name: Use npm with trusted publishing support
-        run: npm install --global npm@11.18.0
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Type check
-        run: npm run type-check
-
-      - name: Test
-        run: npm test
-
-      - name: Build
-        run: npm run build
-
-      - name: Publish to npm
-        run: npm publish --access public
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v3.0.2
-        with:
-          generate_release_notes: true
+          name: public-package
+          path: release
+      - name: Publish public package and checksum
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          cd release
+          version=$(tar -xOzf ./*.tgz package/package.json | jq -r .version)
+          test "$RELEASE_TAG" = "v$version"
+          sha256sum ./*.tgz > SHA256SUMS
+          gh release create "$RELEASE_TAG" ./*.tgz SHA256SUMS \
+            --title "$RELEASE_TAG" \
+            --notes "Built public package for Better Auth 1.7. Install the versioned .tgz URL directly with Bun; no registry credentials are required."

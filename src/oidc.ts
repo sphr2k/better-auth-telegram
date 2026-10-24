@@ -2,9 +2,10 @@ import type { OAuthProvider } from "@better-auth/core/oauth2";
 import {
   createAuthorizationURL,
   validateAuthorizationCode,
+  verifyProviderIdToken,
 } from "@better-auth/core/oauth2";
 import { betterFetch } from "@better-fetch/fetch";
-import { decodeProtectedHeader, importJWK, type JWK, jwtVerify } from "jose";
+import { decodeJwt, importJWK, type JWK } from "jose";
 import {
   DEFAULT_OIDC_JWKS_FETCH_TIMEOUT_MS,
   TELEGRAM_OIDC_AUTH_ENDPOINT,
@@ -39,29 +40,6 @@ const getTelegramPublicKey = async (
   }
 
   return await importJWK(jwk, algorithm);
-};
-
-const verifyTelegramIdToken = async (
-  token: string,
-  clientId: string,
-  jwksFetchTimeoutMs: number
-): Promise<TelegramOIDCClaims> => {
-  const { kid, alg } = decodeProtectedHeader(token);
-  if (!(kid && alg)) {
-    throw new Error("Telegram ID token is missing kid or alg");
-  }
-  if (!SUPPORTED_SIGNING_ALGORITHMS.has(alg)) {
-    throw new Error(`Unsupported Telegram ID token algorithm: ${alg}`);
-  }
-
-  const publicKey = await getTelegramPublicKey(kid, alg, jwksFetchTimeoutMs);
-  const { payload } = await jwtVerify(token, publicKey, {
-    algorithms: [alg],
-    issuer: TELEGRAM_OIDC_ISSUER,
-    audience: clientId,
-  });
-
-  return payload as unknown as TelegramOIDCClaims;
 };
 
 /**
@@ -102,9 +80,7 @@ function buildScopes(options: TelegramOIDCOptions): string[] {
 export function createTelegramOIDCProvider(
   botToken: string,
   options: TelegramOIDCOptions = {}
-): OAuthProvider<TelegramOIDCClaims> & {
-  accountSubject: (context: { profile: TelegramOIDCClaims }) => string;
-} {
+): OAuthProvider<TelegramOIDCClaims> {
   const botId = botToken.split(":")[0]!;
 
   // Client ID and secret come from BotFather's Web Login settings (Bot Settings > Web Login).
@@ -148,9 +124,22 @@ export function createTelegramOIDCProvider(
     }
   };
 
-  return {
+  const provider: OAuthProvider<TelegramOIDCClaims> = {
     id: TELEGRAM_OIDC_PROVIDER_ID,
     name: "Telegram",
+    issuer: TELEGRAM_OIDC_ISSUER,
+    requiresIdTokenNonce: true,
+    idToken: {
+      issuer: TELEGRAM_OIDC_ISSUER,
+      audience: clientId,
+      algorithms: [...SUPPORTED_SIGNING_ALGORITHMS],
+      jwks: async ({ kid, alg }) => {
+        if (!(kid && alg && SUPPORTED_SIGNING_ALGORITHMS.has(alg))) {
+          throw new Error("Unsupported Telegram ID token signing header");
+        }
+        return await getTelegramPublicKey(kid, alg, jwksFetchTimeoutMs);
+      },
+    },
 
     accountSubject({ profile }) {
       if (typeof profile.sub !== "string" || !profile.sub.trim()) {
@@ -159,7 +148,14 @@ export function createTelegramOIDCProvider(
       return profile.sub;
     },
 
-    createAuthorizationURL({ state, codeVerifier, scopes, redirectURI }) {
+    createAuthorizationURL({
+      state,
+      codeVerifier,
+      scopes,
+      redirectURI,
+      idTokenNonce,
+      additionalParams,
+    }) {
       requireOIDCCredentials();
 
       const _scopes = buildScopes(options);
@@ -173,6 +169,8 @@ export function createTelegramOIDCProvider(
         authorizationEndpoint: TELEGRAM_OIDC_AUTH_ENDPOINT,
         scopes: _scopes,
         state,
+        nonce: idTokenNonce,
+        ...(additionalParams ? { additionalParams } : {}),
         codeVerifier,
         redirectURI,
       });
@@ -188,18 +186,6 @@ export function createTelegramOIDCProvider(
         options: providerOptions,
         tokenEndpoint: TELEGRAM_OIDC_TOKEN_ENDPOINT,
       });
-    },
-
-    async verifyIdToken(token) {
-      try {
-        if (!clientId) {
-          return false;
-        }
-        await verifyTelegramIdToken(token, clientId, jwksFetchTimeoutMs);
-        return true;
-      } catch {
-        return false;
-      }
     },
 
     async getUserInfo(token) {
@@ -219,11 +205,16 @@ export function createTelegramOIDCProvider(
         if (!clientId) {
           return null;
         }
-        claims = await verifyTelegramIdToken(
-          token.idToken,
-          clientId,
-          jwksFetchTimeoutMs
-        );
+        if (
+          !(await verifyProviderIdToken(
+            provider,
+            token.idToken,
+            token.expectedIdTokenNonce
+          ))
+        ) {
+          return null;
+        }
+        claims = decodeJwt(token.idToken) as unknown as TelegramOIDCClaims;
       } catch (e) {
         console.warn(
           "[better-auth-telegram] OIDC getUserInfo: failed to verify id_token.",
@@ -252,7 +243,6 @@ export function createTelegramOIDCProvider(
 
       return {
         user: {
-          id: claims.sub,
           name: claims.name,
           image: claims.picture,
           email: placeholderEmail,
@@ -265,6 +255,7 @@ export function createTelegramOIDCProvider(
 
     options: providerOptions,
   };
+  return provider;
 }
 
 export { buildScopes };

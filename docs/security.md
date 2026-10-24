@@ -221,3 +221,17 @@ Found something? Responsible disclosure, please.
 4. Allow time for a fix before public disclosure
 
 We take security seriously. We take sarcasm more seriously, but security is a close second.
+
+## Better Auth 1.7 fork
+
+The OIDC provider declares `accountSubject`, `issuer`, `idToken`, and
+`requiresIdTokenNonce` using Better Auth 1.7's provider contract. Both direct
+ID-token sign-in and authorization-code callbacks use the shared
+`verifyProviderIdToken` verifier. Authorization requests carry the generated
+nonce and callbacks verify it before mapping claims. `getUserInfo` returns local
+user attributes without `id`; the raw, verified `sub` remains the account key.
+
+The fork integration tests run real Better Auth HTTP routes against an in-memory
+database and simulated Telegram token/JWKS endpoints. They do not authenticate a
+real Telegram account. Public release archives contain built artifacts and can
+be installed by URL without registry credentials.

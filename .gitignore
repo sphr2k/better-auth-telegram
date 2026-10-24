@@ -17,3 +17,5 @@ coverage/
 # Vitest
 .vitest/
 voice-tone.md
+# Built release archives
+release/

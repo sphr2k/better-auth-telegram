@@ -2,7 +2,7 @@
 
 Your web app, living inside Telegram. No login popups, no OAuth dances, no "please verify your email." The user opened your Mini App — they're already Telegram. Act accordingly.
 
-Requires `better-auth@>=1.6.22 <1.7.0`.
+Requires `better-auth@>=1.7.12 <1.8.0`.
 
 ## Mini Apps vs Login Widget
 
