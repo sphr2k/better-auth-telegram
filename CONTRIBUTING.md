@@ -5,30 +5,30 @@ You want to help build a Telegram auth plugin. Telegram, the platform where bots
 ## Development Setup
 
 ```bash
-git clone https://github.com/vcode-sh/better-auth-telegram.git
+git clone https://github.com/sphr2k/better-auth-telegram.git
 cd better-auth-telegram
-npm install
+bun install --frozen-lockfile
 ```
 
 ### Prerequisites
 
-- Node.js >= 22 (see `.nvmrc` -- yes, I pinned it, I'm not an animal)
-- npm >= 10
+- Node.js >= 24 (see `.nvmrc` -- yes, I pinned it, I'm not an animal)
+- Bun 1.4.3 (the version used in CI)
 
 ## Commands
 
 These are the incantations. Learn them. Love them. Run them before pushing.
 
 ```bash
-npm run dev          # Watch mode build -- for the impatient
-npm run build        # Production build (ESM + CJS + DTS) -- the real thing
-npm run type-check   # TypeScript strict check -- the compiler judges you so I don't have to
-npm test             # Run all tests -- you'd be surprised how many people skip this
-npm run test:watch   # Watch mode -- for when you're in the zone
-npm run test:ui      # Vitest UI -- pretty graphs that prove you did something
-npm run test:coverage # Coverage report -- the number must go up
-npm run lint         # Biome lint check -- it has opinions and they are correct
-npm run lint:fix     # Auto-fix -- let the machine do the boring part
+bun run dev          # Watch mode build -- for the impatient
+bun run build        # Production build (ESM + CJS + DTS) -- the real thing
+bun run type-check   # TypeScript strict check -- the compiler judges you so I don't have to
+bun run test             # Run all tests -- you'd be surprised how many people skip this
+bun run test:watch   # Watch mode -- for when you're in the zone
+bun run test:ui      # Vitest UI -- pretty graphs that prove you did something
+bun run test:coverage # Coverage report -- the number must go up
+bun run lint         # Biome lint check -- it has opinions and they are correct
+bun run lint:fix     # Auto-fix -- let the machine do the boring part
 ```
 
 ## Project Structure
@@ -48,8 +48,8 @@ src/
 Not guidelines. Not suggestions. Rules.
 
 1. **Tests live next to their code** as `*.test.ts` -- no hunting through a distant `__tests__` folder like it's 2017
-2. **Run `npm run lint:fix`** before committing -- Biome catches things your eyes won't
-3. **All tests must pass** with `npm test` -- a failing test suite is not a "known issue," it's a blocker
+2. **Run `bun run lint:fix`** before committing -- Biome catches things your eyes won't
+3. **All tests must pass** with `bun run test` -- a failing test suite is not a "known issue," it's a blocker
 4. **Type safety everywhere** -- no `any` at public API boundaries, this isn't JavaScript
 5. **Security first, features second** -- validate inputs, verify signatures, no shortcuts
 6. **Async verification only** -- all crypto goes through `crypto.subtle`, no synchronous `node:crypto`
@@ -71,7 +71,7 @@ I maintain 90%+ coverage. Not because I worship the metric, but because untested
 2. Write tests for your new code (yes, before the PR, not "I'll add them later")
 3. Make sure absolutely everything passes:
    ```bash
-   npm run type-check && npm test && npm run lint
+   bun run type-check && bun run test && bun run lint
    ```
 4. Update documentation if applicable (it is applicable more often than you think)
 5. Update `CHANGELOG.md` under an `[Unreleased]` section

@@ -5,6 +5,31 @@ All notable changes to the better-auth-telegram plugin will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Align installation, runtime and contributor/agent documentation with the public fork archive, Node.js 24 and Better Auth `>=1.7.12 <1.8.0`.
+- Name the ID-token verification test suite after Better Auth's shared `verifyProviderIdToken` API.
+
+## [2.1.0-sphr2k.1] - 2026-10-24
+
+### Changed
+
+- Target Better Auth and `@better-auth/core` `>=1.7.12 <1.8.0`; replace the legacy provider `verifyIdToken` method with declarative verification configuration.
+- Resolve provider account identity from the original OIDC `sub` through `accountSubject`; `getUserInfo` returns local user attributes without `id`.
+- Publish built ESM/CJS/declaration files as a public GitHub Release `.tgz` with `SHA256SUMS`, installable without registry credentials. Use Bun and its frozen lockfile for development and release CI.
+
+### Added
+
+- `oidc.jwksFetchTimeoutMs` with a 10,000 ms default and validation of positive, finite values; incorporates upstream PR #38.
+- Real Better Auth HTTP-route integration tests for signed-token callbacks, session reuse, account linking, Widget and Mini App login using simulated Telegram endpoints and an in-memory database.
+
+### Security
+
+- Verify ID-token signatures, required claims, issuer, audience, expiry and request-bound nonce before mapping profile claims, using Better Auth 1.7's shared verifier for both callback and direct ID-token flows.
+- Preserve the `RS256`, `ES256` and `EdDSA` algorithm allowlist and `kid`/`alg` JWKS matching. Reject missing, blank and non-string account subjects.
+
 ## [2.0.1] - 2026-07-29
 
 ### Changed

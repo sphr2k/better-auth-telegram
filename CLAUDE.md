@@ -1,6 +1,6 @@
 # better-auth-telegram
 
-Telegram authentication plugin for [Better Auth](https://www.better-auth.com/). Login Widget + Mini App + OIDC auth flows, published as `better-auth-telegram` on npm.
+Telegram authentication plugin for [Better Auth](https://www.better-auth.com/). Login Widget + Mini App + OIDC auth flows, distributed as the public `better-auth-telegram` package archive on this fork's GitHub Releases. Installation instructions: `docs/installation.md`.
 
 ## Architecture
 
@@ -12,7 +12,7 @@ Two entry points, two export paths:
 Supporting modules:
 
 - **`src/verify.ts`** -- HMAC-SHA256 verification via Web Crypto API. Two paths: Login Widget (`SHA256(botToken)`) and Mini App (`HMAC-SHA256("WebAppData", botToken)`)
-- **`src/oidc.ts`** -- Telegram OIDC provider factory. Creates an `OAuthProvider` for Better Auth's social login system using OAuth 2.0 Authorization Code flow with PKCE via `oauth.telegram.org`. Allowlisted JWT verification via JWKS.
+- **`src/oidc.ts`** -- Telegram OIDC provider factory. Creates an `OAuthProvider` for Better Auth's social login system using OAuth 2.0 Authorization Code flow with PKCE via `oauth.telegram.org`. Allowlisted JWT verification via JWKS and Better Auth 1.7's shared verifier, with an authorization-request nonce. `accountSubject` preserves the raw OIDC `sub`; local user mapping omits `id`.
 - **`src/types.ts`** -- All TypeScript interfaces (`TelegramPluginOptions`, `TelegramAuthData`, Mini App types, `TelegramOIDCOptions`, `TelegramOIDCClaims`)
 - **`src/constants.ts`** -- Error codes, success messages, `PLUGIN_ID`, `DEFAULT_MAX_AUTH_AGE`, OIDC endpoints/issuer constants
 
@@ -48,27 +48,27 @@ Schema conditionally extends `user` table with `telegramId`, `telegramUsername`,
 ## Commands
 
 ```bash
-npm run build          # tsup (ESM + CJS + .d.ts)
-npm run dev            # tsup --watch
-npm run type-check     # tsc --noEmit
-npm run test           # vitest run
-npm run test:watch     # vitest (watch mode)
-npm run test:coverage  # vitest run --coverage
-npm run lint           # ultracite check
-npm run lint:fix       # ultracite fix
+bun run build          # tsup (ESM + CJS + .d.ts)
+bun run dev            # tsup --watch
+bun run type-check     # tsc --noEmit
+bun run test           # vitest run
+bun run test:watch     # vitest (watch mode)
+bun run test:coverage  # vitest run --coverage
+bun run lint           # ultracite check
+bun run lint:fix       # ultracite fix
 ```
 
-Single test file: `npx vitest run src/verify.test.ts`
+Single test file: `bunx vitest run src/verify.test.ts`
 
 ## Dependencies
 
-**Runtime (peer):** `better-auth` (`>=1.6.22 <1.7.0`)
+**Runtime (peer):** `better-auth` and `@better-auth/core` (`>=1.7.12 <1.8.0`)
 
 **Build external:** `better-auth`, `zod` (tsup external)
 
 **Dev:** Biome, ultracite, tsup, TypeScript 5.9, Vitest 4, happy-dom
 
-**Node:** >= 22.0.0
+**Node:** >= 24.0.0
 
 ## Review Guidelines
 

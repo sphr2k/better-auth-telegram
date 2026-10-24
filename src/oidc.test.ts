@@ -674,7 +674,7 @@ describe("createTelegramOIDCProvider", () => {
     });
   });
 
-  describe("verifyIdToken", () => {
+  describe("verifyProviderIdToken", () => {
     let rsaKeyPair: Awaited<ReturnType<typeof generateKeyPair>>;
     let jwk: any;
 

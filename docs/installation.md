@@ -4,17 +4,17 @@ You want Telegram auth in your app. Bold choice. Let's get it done without a twe
 
 ## Prerequisites
 
-- Node.js >= 22
+- Node.js >= 24
 - A [Better Auth](https://www.better-auth.com/) project (`>=1.7.12 <1.8.0`)
 - A Telegram account (shocking, I know)
 
 ## Install
 
 ```bash
-npm install better-auth-telegram
+bun add https://github.com/sphr2k/better-auth-telegram/releases/download/v2.1.0-sphr2k.1/better-auth-telegram-2.1.0-sphr2k.1.tgz
 ```
 
-Works with pnpm, yarn, bun -- whatever you've pledged allegiance to this month.
+This is the public, built fork package for Better Auth 1.7. No registry login or token is required.
 
 ## Create a Telegram Bot
 

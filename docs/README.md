@@ -19,7 +19,7 @@ ESM + CJS | Web Crypto API | Works where `node:crypto` fears to tread
 ## Quick Start
 
 ```bash
-npm install better-auth-telegram
+bun add https://github.com/sphr2k/better-auth-telegram/releases/download/v2.1.0-sphr2k.1/better-auth-telegram-2.1.0-sphr2k.1.tgz
 ```
 
 Message [@BotFather](https://t.me/botfather), run `/newbot`, pretend you had a plan all along.
@@ -90,7 +90,7 @@ That's it. The rest is in the [Installation Guide](./installation.md) for people
 
 ## Requirements
 
-- Node.js >= 22 (or Bun, or any runtime with Web Crypto API)
+- Node.js >= 24 (or Bun, or any runtime with Web Crypto API)
 - `better-auth@>=1.7.12 <1.8.0`
 - HTTPS (Telegram insists, and honestly, so should you)
 - Public domain (use ngrok for local dev)
@@ -100,7 +100,7 @@ That's it. The rest is in the [Installation Guide](./installation.md) for people
 ## Links
 
 - [GitHub](https://github.com/vcode-sh/better-auth-telegram)
-- [npm](https://www.npmjs.com/package/better-auth-telegram)
+- [Public fork releases](https://github.com/sphr2k/better-auth-telegram/releases)
 - [Changelog](../CHANGELOG.md)
 - [Better Auth](https://www.better-auth.com/)
 - [Telegram Bot API](https://core.telegram.org/bots/api)
